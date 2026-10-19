@@ -5,6 +5,10 @@
     commit, without the card. A draft stashed last time comes back in it, with the web's stash@{0} and drop on the left
     of Commit's row.
 
+    A new commit's row starts with the web's clock button, which schedules it: "Submit at" opens under the field with
+    the system's date and time picker, in the phone's timezone, within the 30 days devnull allows, and the web's lines
+    on what scheduling means and Scheduled commits →. Commit becomes Schedule commit, and waits for a time too.
+
     Report commit, in someone else's published commit's More menu, opens it as the web's Report dialog: the private,
     not-hidden line, the commit's body clamped to three lines, the four reasons, optional details, and Send report,
     which waits for a reason. Once devnull has the report, the sheet says so, with Done. If devnull says no, why shows
@@ -39,17 +43,32 @@
                         @include('native.partials.quoted-commit', ['quoted' => $sheetCommit, 'static' => true])
                     @endif
 
+                    @if (! $quoting && $scheduling)
+                        @include('native.partials.schedule-picker')
+                    @endif
+
                     @if ($sheetError)
                         <native:text ref="sheet-error" class="w-full text-sm text-theme-destructive">{{ $sheetError }}</native:text>
                     @endif
 
                     <native:row class="w-full gap-3 items-center justify-end">
+                        @unless ($quoting)
+                            @php($scheduleLabel = $scheduling ? "Don't schedule" : 'Schedule for later')
+                            <native:pressable ref="sheet-schedule" @press="toggleSchedule" class="-ml-2" a11y-label="{{ $scheduleLabel }}">
+                                <native:column class="min-w-[44] h-[36] items-center justify-center rounded-md {{ $scheduling ? 'bg-theme-primary-soft' : '' }}">
+                                    <native:icon :ios="\App\Icons\Lucide::Clock3->ios()" :android="\App\Icons\Lucide::Clock3->android()" :size="20" class="{{ $scheduling ? 'text-theme-primary' : 'text-theme-ink-muted' }}" />
+                                </native:column>
+                            </native:pressable>
+                            @unless ($sheetRestored)
+                                <native:spacer />
+                            @endunless
+                        @endunless
                         @if ($sheetRestored)
                             @include('native.partials.stash-label', ['ref' => 'sheet-stash', 'drop' => 'dropSheetStash'])
                             <native:spacer />
                         @endif
                         @include('native.partials.body-counter', ['body' => $sheetBody, 'ref' => 'sheet-budget'])
-                        <native:button ref="sheet-commit" :variant="$myColour" :disabled="$sheetLength < \App\Devnull\Data\Commit::MinLength || $sheetLength > \App\Devnull\Data\Commit::MaxLength" @press="commitFromSheet">Commit</native:button>
+                        <native:button ref="sheet-commit" :variant="$myColour" :disabled="$sheetLength < \App\Devnull\Data\Commit::MinLength || $sheetLength > \App\Devnull\Data\Commit::MaxLength || ($scheduling && ! $quoting && ! $hasScheduledTime)" @press="commitFromSheet">{{ $scheduling && ! $quoting ? 'Schedule commit' : 'Commit' }}</native:button>
                     </native:row>
                 </native:column>
             </native:scroll-view>

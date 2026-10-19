@@ -3,6 +3,7 @@
 namespace App\Devnull\Data;
 
 use App\Devnull\Lane;
+use App\Devnull\Timezone;
 use Carbon\CarbonImmutable;
 
 /**
@@ -13,7 +14,8 @@ use Carbon\CarbonImmutable;
  * custom colour you chose (null for Automatic) and the one Automatic gives you, your GitHub
  * Sponsors page, and when your profile was last synced from GitHub (null when
  * it only was when you signed in). It has whether pastéis mode is on, how
- * many pastéis you can still give today, and how many others have given you.
+ * many pastéis you can still give today, and how many others have given you,
+ * and the timezone you chose, or null while you haven't.
  */
 final readonly class CurrentUser
 {
@@ -28,6 +30,7 @@ final readonly class CurrentUser
         public bool $pasteisMode = false,
         public Pasteis $pasteisToday = new Pasteis,
         public int $pasteisReceived = 0,
+        public ?string $timezone = null,
     ) {}
 
     /**
@@ -55,15 +58,16 @@ final readonly class CurrentUser
             pasteisMode: ($data['pasteis_mode'] ?? false) === true,
             pasteisToday: Pasteis::fromKept(['remaining' => $data['pasteis_remaining'] ?? null, 'resets_at' => $data['pasteis_resets_at'] ?? null]),
             pasteisReceived: is_int($data['pasteis_received'] ?? null) ? max(0, $data['pasteis_received']) : 0,
+            timezone: Timezone::isKnown($data['timezone'] ?? null) ? $data['timezone'] : null,
         );
     }
 
     /**
      * You as this phone remembers you, until devnull says the rest.
      */
-    public static function remembered(User $user): self
+    public static function remembered(User $user, ?string $timezone = null): self
     {
-        return self::fromArray(['data' => $user->toArray()]);
+        return self::fromArray(['data' => [...$user->toArray(), 'timezone' => $timezone]]);
     }
 
     /**

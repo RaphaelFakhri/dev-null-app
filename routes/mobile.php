@@ -11,6 +11,7 @@ use App\NativeComponents\Onboarding;
 use App\NativeComponents\Profile;
 use App\NativeComponents\Safety;
 use App\NativeComponents\Saved;
+use App\NativeComponents\ScheduledCommits;
 use App\NativeComponents\ThisDevice;
 use Illuminate\Support\Facades\Route;
 
@@ -25,13 +26,14 @@ Route::nativeGroup(TabsLayout::class, function (): void {
     Route::native('/profile', Profile::class);
     Route::native('/profile/device', ThisDevice::class);
 
-    // Commits, profiles, their followers and the people you mute and block open
-    // beneath the tab they were tapped in, so that tab's own navigation stack
-    // pushes them (see Concerns\OpensInTab).
+    // Commits, profiles, their followers, the people you mute and block, and
+    // your scheduled commits open beneath the tab they were tapped in, so that
+    // tab's own navigation stack pushes them (see Concerns\OpensInTab).
     foreach (TabsLayout::Tabs as $tab) {
         Route::native("{$tab}/commits/{id}", CommitDetail::class);
         Route::native("{$tab}/users/{username}", Profile::class);
         Route::native("{$tab}/users/{username}/{type}", Connections::class)->whereIn('type', Connections::Types);
         Route::native("{$tab}/safety", Safety::class);
+        Route::native("{$tab}/scheduled", ScheduledCommits::class);
     }
 });

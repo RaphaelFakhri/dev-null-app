@@ -46,6 +46,7 @@ final class ResponseCache
         '#^users/[^/]+/commits$#',
         '#^saved$#',
         '#^users/[^/]+/(followers|following)$#',
+        '#^scheduled-commits$#',
     ];
 
     /**
@@ -101,7 +102,7 @@ final class ResponseCache
      */
     public static function caches(string $path, array $query = []): bool
     {
-        if (array_key_exists('cursor', self::normalise($query))) {
+        if (array_intersect_key(self::normalise($query), ['cursor' => true, 'page' => true]) !== []) {
             return false;
         }
 
